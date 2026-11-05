@@ -1,146 +1,202 @@
-# GridSense — Formula 1 Race Intelligence
+# GridSense – Formula 1 Race Intelligence
 
-A Flask application that estimates a driver's finishing position and podium probability from historical Formula 1 data. The interface presents the prediction workflow, model evaluation metrics, and clearly marked planned analytics modules.
+**GridSense** is a machine learning-powered web application designed to explore Formula 1 race performance and predict a driver's finishing position and probability of achieving a podium finish.
 
----
+The project uses historical Formula 1 racing data to train predictive models and presents their results through an interactive web interface.
 
-## 📸 Overview
+## About the Project
 
-The app uses two ML models trained on historical F1 race data:
+Formula 1 race results depend on several factors, including starting grid position, driver performance and constructor performance.
 
-- **Linear Regression** — Predicts the finishing position based on grid position, historical performance, and constructor.
-- **Logistic Regression** — Predicts the probability of a podium finish (top 3).
+GridSense uses historical race data to build machine learning models that estimate race outcomes. Users can select a driver, constructor, circuit and starting grid position to generate predictions.
 
-Users select a driver, constructor, circuit, and starting grid position, then receive an instant prediction with a visual chart.
-
----
+The main objective is to combine data analysis, machine learning and web development in one practical application.
 
 ## Features
 
-- **Race position estimate** — Linear regression using grid position, historical driver points, and constructor.
-- **Podium probability** — Logistic regression estimates the probability of a top-three finish.
-- **Prediction visualization** — Matplotlib chart presents position and probability on separate, labeled scales.
-- **Model performance** — The interface fetches regression RMSE/R² and classification accuracy/precision/recall from `/metrics`. MAE, F1-score, and ROC-AUC are identified as not calculated by the current backend.
-- **Dataset context** — The dashboard identifies the latest season present in the loaded results data.
-- **Planned analytics** — Driver, constructor, and circuit analytics are explicitly marked as planned rather than represented with placeholder data.
+- **Finishing Position Prediction:** Estimates a driver's finishing position using Linear Regression.
+- **Podium Probability:** Uses Logistic Regression to estimate the probability of a top-three finish.
+- **Interactive Prediction Interface:** Allows users to provide race-related inputs and view predictions.
+- **Visual Results:** Displays prediction results through charts generated using Matplotlib.
+- **Model Evaluation:** Presents available regression and classification evaluation metrics.
+- **Historical F1 Data:** Uses multiple datasets containing information about drivers, constructors, circuits, races and results.
+- **Responsive Interface:** Provides a web interface built using HTML, CSS and JavaScript.
 
-The circuit selection is included in the prediction summary, but is not currently used as a model feature. The backend does not currently accept season or race selection.
+## Technology Stack
 
----
+| Category | Technologies |
+|---|---|
+| Programming Language | Python |
+| Backend | Flask |
+| Machine Learning | Scikit-learn |
+| Data Processing | Pandas, NumPy |
+| Data Visualization | Matplotlib |
+| Frontend | HTML, CSS, JavaScript |
+| Dataset | Historical Formula 1 CSV datasets |
 
-## 🛠️ Tech Stack
+## Machine Learning Approach
 
-| Layer       | Technology                          |
-|-------------|-------------------------------------|
-| Backend     | Python, Flask                       |
-| ML Models   | scikit-learn (Linear & Logistic Regression) |
-| Data        | pandas, NumPy                       |
-| Charting    | Matplotlib                          |
-| Frontend    | HTML, CSS, vanilla JavaScript       |
-| Typography  | System sans-serif stack             |
+GridSense currently uses two machine learning algorithms.
 
----
+### 1. Linear Regression
 
-## 📁 Project Structure
+Linear Regression is used to estimate the driver's finishing position.
 
-```
-Formula-1---Podium-Position-Predictor/
-├── app.py                  # Flask app with ML model training & API routes
-├── requirements.txt        # Python dependencies
-├── data/                   # F1 historical datasets (CSV)
+The model uses available historical performance information, including grid position, driver points and constructor-related features.
+
+### 2. Logistic Regression
+
+Logistic Regression is used to estimate the probability of a driver finishing in the top three positions.
+
+The output represents the model's estimated podium probability, not a guaranteed race result.
+
+### Model Evaluation
+
+The application retrieves available evaluation metrics from its backend.
+
+**Regression metrics**
+- Root Mean Squared Error (RMSE)
+- R-squared (R²)
+
+**Classification metrics**
+- Accuracy
+- Precision
+- Recall
+
+Metrics that are not currently calculated by the backend are not presented as measured results.
+
+## Dataset
+
+The project uses historical Formula 1 datasets stored locally in the `data/` directory.
+
+The datasets contain information about:
+
+- Drivers
+- Constructors
+- Circuits
+- Race schedules and results
+- Driver standings
+- Constructor standings
+- Qualifying results
+- Lap times
+- Pit stops
+- Sprint results
+
+Keeping the datasets locally available allows the application to load historical records without depending on a live external data API.
+
+## Project Structure
+
+```text
+GridSense/
+│
+├── app.py
+├── requirements.txt
+├── render.yaml
+├── README.md
+│
+├── data/
 │   ├── circuits.csv
 │   ├── constructors.csv
 │   ├── drivers.csv
 │   ├── races.csv
 │   ├── results.csv
-│   └── ...                 # Additional F1 data files
+│   ├── lap_times.csv
+│   ├── pit_stops.csv
+│   └── ...
+│
 ├── templates/
-│   └── index.html          # Main web page (Jinja2 template)
-├── static/
-│   ├── css/
-│   │   └── style.css       # GridSense design system and responsive layout
-│   ├── js/
-│   │   └── app.js          # Prediction form and metrics interactions
-│   └── images/
-│       └── backgroundf1.jpg
-└── README.md
+│   └── index.html
+│
+└── static/
+    ├── css/
+    │   └── style.css
+    └── js/
+        └── app.js
 ```
 
----
+## Installation and Setup
 
-## 🚀 Getting Started
+Follow these steps to run GridSense on your local machine.
 
 ### Prerequisites
 
-- Python 3.10 or higher
+- Python 3.10 or later
+- Git
 
-### Installation
+### 1. Clone the Repository
 
-1. **Clone the repository**
+```bash
+git clone https://github.com/Krpankaj8/GridSense.git
+cd GridSense
+```
 
-   ```bash
-   git clone https://github.com/prakhar-sonii/Formula-1---Podium-Position-Predictor.git
-   cd Formula-1---Podium-Position-Predictor
-   ```
+### 2. Create a Virtual Environment
 
-2. **Create a virtual environment** (recommended)
+**Windows:**
 
-   ```bash
-   python -m venv venv
-   source venv/bin/activate        # macOS/Linux
-   venv\Scripts\activate           # Windows
-   ```
+```powershell
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+```
 
-3. **Install dependencies**
+**macOS/Linux:**
 
-   ```bash
-   pip install -r requirements.txt
-   ```
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
 
-4. **Run the application**
+### 3. Install Dependencies
 
-   ```bash
-   python app.py
-   ```
+```bash
+pip install -r requirements.txt
+```
 
-5. **Open in browser**
+### 4. Run the Application
 
-   Navigate to [http://127.0.0.1:5000](http://127.0.0.1:5000)
+```bash
+python app.py
+```
+
+### 5. Open GridSense
+
+Open your browser and visit:
+
+```text
+http://127.0.0.1:5000
+```
+
+Use the port displayed in your terminal if your application is configured to run on a different port.
+
+## API Endpoints
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/` | Loads the main application interface |
+| GET | `/metrics` | Retrieves available model evaluation metrics |
+| POST | `/predict` | Generates finishing position and podium probability predictions |
+
+## Future Improvements
+
+Some areas that can be explored in future versions include:
+
+- Additional machine learning algorithms.
+- More comprehensive driver performance analysis.
+- Constructor and circuit performance comparisons.
+- Historical race trend visualizations.
+- Improved model evaluation and validation.
+- More advanced race outcome prediction features.
+
+## Project Purpose
+
+GridSense was developed as a practical project to apply concepts from Python programming, data preprocessing, machine learning, data visualization and Flask-based web development.
+
+It demonstrates how historical sports data can be transformed into an interactive predictive analytics application.
+
+## Repository
+
+**GitHub:** https://github.com/Krpankaj8/GridSense
 
 ---
 
-## Model Performance
-
-The dashboard loads evaluation values at runtime from `/metrics`; it does not hard-code scores. The current endpoint returns RMSE, R², accuracy, precision, and recall. Other requested metrics remain unavailable until they are added to the backend evaluation.
-
----
-
-## 🔌 API Endpoints
-
-| Method | Endpoint    | Description                          |
-|--------|-------------|--------------------------------------|
-| GET    | `/`         | Main prediction page                 |
-| GET    | `/metrics`  | Returns model evaluation metrics (JSON) |
-| POST   | `/predict`  | Returns predicted position & podium probability (JSON) |
-
----
-
-## 📝 How It Works
-
-1. **Data Loading** — Reads F1 datasets (results, drivers, races, constructors, circuits) from `data/`.
-2. **Preprocessing** — Merges tables, engineers features (historical points, constructor one-hot encoding, podium flag).
-3. **Model Training** — Fits Linear Regression (position prediction) and Logistic Regression (podium classification) with `StandardScaler` normalization.
-4. **Prediction** — Accepts user input via the web form, transforms it with the trained scaler, and runs it through both models.
-5. **Visualization** — Generates a Matplotlib chart with independent scales for predicted position and podium probability. Circuit selection is currently contextual and does not affect the model output.
-
----
-
-## 📄 License
-
-This project is open source and available for educational purposes.
-
----
-
-## 🙏 Acknowledgments
-
-- [Ergast Developer API](http://ergast.com/mrd/) — Source of F1 historical data
+*GridSense – Turning Formula 1 historical data into race insights.*
