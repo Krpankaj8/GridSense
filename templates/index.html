@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#111214">
+    <title>GridSense — Formula 1 Race Intelligence</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="app-shell">
+        <header class="site-header">
+            <a class="brand" href="#overview" aria-label="GridSense overview">
+                <span class="brand-mark" aria-hidden="true">G</span>
+                <span class="brand-copy">
+                    <span class="brand-name">GridSense</span>
+                    <span class="brand-subtitle">Formula 1 Race Intelligence</span>
+                </span>
+            </a>
+
+            <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav">
+                <span class="sr-only">Toggle navigation</span>
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+            </button>
+
+            <nav class="primary-nav" id="primary-nav" aria-label="Main navigation">
+                <a href="#overview">Overview</a>
+                <a href="#predictor">Race Predictor</a>
+                <a href="#driver-analytics">Driver Analytics</a>
+                <a href="#constructor-analytics">Constructor Analytics</a>
+                <a href="#circuit-insights">Circuit Insights</a>
+                <a href="#model-performance">Model Performance</a>
+                <a href="#about-project">About Project</a>
+            </nav>
+
+            <div class="season-indicator">
+                <span class="status-dot" aria-hidden="true"></span>
+                <span>Dataset through <strong>{{ latest_season }}</strong></span>
+            </div>
+        </header>
+
+        <main>
+            <section class="page-intro" id="overview" aria-labelledby="page-title">
+                <div>
+                    <p class="eyebrow">Race intelligence <span aria-hidden="true">/</span> Pre-race analysis</p>
+                    <h1 id="page-title">Read the grid.<br><span>Estimate the outcome.</span></h1>
+                    <p class="intro-copy">A data-led finishing-position and podium estimate, built from historical Formula 1 race results.</p>
+                </div>
+                <a class="text-link" href="#predictor">Open race predictor <span aria-hidden="true">↘</span></a>
+            </section>
+
+            <section class="workspace-section" id="predictor" aria-labelledby="predictor-title">
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">01 <span aria-hidden="true">/</span> Prediction workspace</p>
+                        <h2 id="predictor-title">Race Predictor</h2>
+                    </div>
+                    <p class="section-note">Configure a driver and grid position to generate a model estimate.</p>
+                </div>
+
+                <div class="workspace-grid">
+                    <form id="prediction-form" class="panel configuration-panel" method="post" action="{{ url_for('predict') }}">
+                        <div class="panel-heading">
+                            <div>
+                                <span class="panel-kicker">Race setup</span>
+                                <h3>Prediction inputs</h3>
+                            </div>
+                            <span class="step-index">01</span>
+                        </div>
+
+                        <div class="field">
+                            <label for="driver-search">Driver</label>
+                            <input id="driver-search" type="search" list="driver-options" placeholder="Search driver name" autocomplete="off" required aria-describedby="driver-help">
+                            <input id="driver" name="driver" type="hidden">
+                            <datalist id="driver-options">
+                                {% for driver in driver_options %}
+                                    <option value="{{ driver.forename }} {{ driver.surname }}" data-driver-ref="{{ driver.driverRef }}"></option>
+                                {% endfor %}
+                            </datalist>
+                            <p class="field-help" id="driver-help">Type a name and choose a listed driver.</p>
+                        </div>
+
+                        <div class="field">
+                            <label for="constructor">Constructor</label>
+                            <select id="constructor" name="constructor" required>
+                                <option value="" selected disabled>Select a constructor</option>
+                                {% for constructor in constructors %}
+                                    <option value="{{ constructor }}">{{ constructor }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="field">
+                            <label for="circuit">Circuit</label>
+                            <select id="circuit" name="circuit" required>
+                                <option value="" selected disabled>Select a circuit</option>
+                                {% for circuit in circuits %}
+                                    <option value="{{ circuit }}">{{ circuit }}</option>
+                                {% endfor %}
+                            </select>
+                            <p class="field-help">Shown in the race summary; circuit data is not currently a model input.</p>
+                        </div>
+
+                        <div class="field grid-field">
+                            <div class="label-row">
+                                <label for="grid">Starting grid position</label>
+                                <output id="grid-value" for="grid">1</output>
+                            </div>
+                            <input id="grid" name="grid" type="range" min="1" max="22" value="1" step="1" aria-valuetext="Position 1">
+                            <div class="range-scale" aria-hidden="true"><span>1</span><span>22</span></div>
+                        </div>
+
+                        <p class="model-input-note">The current model uses grid position, historical driver points and constructor. Season and race selection are not available in the backend.</p>
+                        <button class="predict-button" id="predict-button" type="submit">
+                            <span class="button-label">Predict race</span>
+                            <span class="button-arrow" aria-hidden="true">→</span>
+                        </button>
+                        <p class="form-status" id="form-status" role="status" aria-live="polite"></p>
+                    </form>
+
+                    <section class="panel results-panel" aria-labelledby="results-title" aria-live="polite">
+                        <div class="panel-heading">
+                            <div>
+                                <span class="panel-kicker">Model output</span>
+                                <h3 id="results-title">Prediction results</h3>
+                            </div>
+                            <span class="result-status"><span class="status-dot" aria-hidden="true"></span><span id="result-state">Awaiting inputs</span></span>
+                        </div>
+
+                        <div class="empty-state" id="empty-state">
+                            <span class="empty-rule" aria-hidden="true"></span>
+                            <p class="empty-title">Your race estimate will appear here.</p>
+                            <p>Choose the race context and starting position, then run a prediction.</p>
+                        </div>
+
+                        <div class="results-content" id="results-content" hidden>
+                            <div class="result-highlights">
+                                <div class="position-result">
+                                    <span class="metric-label">Predicted finishing position</span>
+                                    <div><span class="position-prefix">P</span><span class="position-value" id="position-value">—</span></div>
+                                    <span class="metric-footnote">Regression estimate · lower is better</span>
+                                </div>
+                                <div class="probability-result">
+                                    <div class="probability-heading">
+                                        <span class="metric-label">Podium probability</span>
+                                        <strong id="probability-value">—</strong>
+                                    </div>
+                                    <div class="probability-track" id="probability-track" role="progressbar" aria-label="Podium probability" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                                        <span id="probability-fill"></span>
+                                    </div>
+                                    <span class="metric-footnote">Classification estimate · top-three finish</span>
+                                </div>
+                            </div>
+
+                            <div class="race-summary" aria-label="Prediction summary">
+                                <div><span>Driver</span><strong id="summary-driver">—</strong></div>
+                                <div><span>Constructor</span><strong id="summary-constructor">—</strong></div>
+                                <div><span>Circuit</span><strong id="summary-circuit">—</strong></div>
+                                <div><span>Starting position</span><strong id="summary-grid">—</strong></div>
+                            </div>
+
+                            <div class="chart-heading">
+                                <div>
+                                    <span class="panel-kicker">Estimate profile</span>
+                                    <h4>Position &amp; podium probability</h4>
+                                </div>
+                                <span class="chart-note">Independent scales</span>
+                            </div>
+                            <img class="prediction-chart" id="prediction-chart" alt="Chart showing predicted finishing position and podium probability on separate scales">
+                        </div>
+                    </section>
+                </div>
+            </section>
+
+            <section class="module-section" id="driver-analytics" aria-labelledby="driver-title">
+                <div class="section-heading compact-heading">
+                    <div>
+                        <p class="eyebrow">02 <span aria-hidden="true">/</span> Performance modules</p>
+                        <h2 id="driver-title">Driver Analytics</h2>
+                    </div>
+                    <span class="planned-badge">Planned</span>
+                </div>
+                <p class="module-copy">Driver comparisons and historical podium trends are not yet available as an analytics view. The predictor uses historical driver points internally.</p>
+            </section>
+
+            <section class="module-section" id="constructor-analytics" aria-labelledby="constructor-title">
+                <div class="section-heading compact-heading">
+                    <div>
+                        <p class="eyebrow">03 <span aria-hidden="true">/</span> Performance modules</p>
+                        <h2 id="constructor-title">Constructor Analytics</h2>
+                    </div>
+                    <span class="planned-badge">Planned</span>
+                </div>
+                <p class="module-copy">Constructor comparisons and season-by-season performance views are not currently exposed by the application.</p>
+            </section>
+
+            <section class="module-section" id="circuit-insights" aria-labelledby="circuit-title">
+                <div class="section-heading compact-heading">
+                    <div>
+                        <p class="eyebrow">04 <span aria-hidden="true">/</span> Performance modules</p>
+                        <h2 id="circuit-title">Circuit Insights</h2>
+                    </div>
+                    <span class="planned-badge">Planned</span>
+                </div>
+                <p class="module-copy">Circuit is retained as prediction context, but circuit-specific historical performance is not part of the current model or analytics output.</p>
+            </section>
+
+            <section class="performance-section" id="model-performance" aria-labelledby="performance-title">
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">05 <span aria-hidden="true">/</span> Evaluation</p>
+                        <h2 id="performance-title">Model Performance</h2>
+                    </div>
+                    <p class="section-note">Reported values come from the existing <code>/metrics</code> evaluation endpoint.</p>
+                </div>
+
+                <div class="metrics-grid" id="metrics-grid" aria-live="polite">
+                    <article class="panel metric-group">
+                        <div class="metric-group-heading"><h3>Finishing-position regression</h3><span>Position estimate</span></div>
+                        <dl class="metric-list">
+                            <div><dt>MAE</dt><dd><span class="metric-value unavailable">Not calculated</span><span class="metric-description">Average absolute error</span></dd></div>
+                            <div><dt>RMSE</dt><dd><span class="metric-value" data-metric="rmse">Loading</span><span class="metric-description">Penalizes larger errors</span></dd></div>
+                            <div><dt>R²</dt><dd><span class="metric-value" data-metric="r2">Loading</span><span class="metric-description">Variance explained by the model</span></dd></div>
+                        </dl>
+                    </article>
+                    <article class="panel metric-group">
+                        <div class="metric-group-heading"><h3>Podium classification</h3><span>Top-three estimate</span></div>
+                        <dl class="metric-list">
+                            <div><dt>Accuracy</dt><dd><span class="metric-value" data-metric="accuracy">Loading</span><span class="metric-description">Correct predictions overall</span></dd></div>
+                            <div><dt>Precision</dt><dd><span class="metric-value" data-metric="precision">Loading</span><span class="metric-description">Predicted podiums that were podiums</span></dd></div>
+                            <div><dt>Recall</dt><dd><span class="metric-value" data-metric="recall">Loading</span><span class="metric-description">Actual podiums identified</span></dd></div>
+                            <div><dt>F1-score</dt><dd><span class="metric-value unavailable">Not calculated</span><span class="metric-description">Balance of precision and recall</span></dd></div>
+                            <div><dt>ROC-AUC</dt><dd><span class="metric-value unavailable">Not calculated</span><span class="metric-description">Ranking quality across thresholds</span></dd></div>
+                        </dl>
+                    </article>
+                </div>
+                <p class="metrics-error" id="metrics-error" role="status" hidden></p>
+                <p class="method-note">Regression metrics describe error in the predicted finishing position. Classification metrics evaluate the separate probability estimate for a top-three finish. Scores reflect the project’s existing holdout evaluation and are not guarantees of race outcomes.</p>
+            </section>
+
+            <section class="about-section" id="about-project" aria-labelledby="about-title">
+                <div class="section-heading compact-heading">
+                    <div>
+                        <p class="eyebrow">06 <span aria-hidden="true">/</span> Project notes</p>
+                        <h2 id="about-title">About GridSense</h2>
+                    </div>
+                </div>
+                <div class="about-grid">
+                    <p>GridSense brings the project’s historical Formula 1 data and two-model prediction workflow into one focused race-analysis workspace.</p>
+                    <p><strong>Regression</strong> estimates finishing position. <strong>Classification</strong> estimates the probability of finishing in the top three. Both models are trained from the project dataset when the Flask application starts.</p>
+                </div>
+            </section>
+        </main>
+
+        <footer class="site-footer">
+            <span>GridSense <span aria-hidden="true">/</span> Formula 1 Race Intelligence</span>
+            <span>Historical model estimates · not race results</span>
+        </footer>
+    </div>
+    <script src="{{ url_for('static', filename='js/app.js') }}" defer></script>
+</body>
+</html>
